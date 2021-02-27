@@ -2,9 +2,16 @@
 
 namespace JD\Cloudder;
 
+use Cloudinary\Api\Admin\AdminApi;
+use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Cloudinary;
 use Illuminate\Support\ServiceProvider;
-use Cloudinary;
 
+/**
+ * Class CloudderServiceProvider
+ *
+ * @package JD\Cloudder
+ */
 class CloudderServiceProvider extends ServiceProvider
 {
 
@@ -13,7 +20,7 @@ class CloudderServiceProvider extends ServiceProvider
      *
      * @var bool
      */
-    protected $defer = false;
+    protected $defer = FALSE;
 
     /**
      * Bootstrap classes for packages.
@@ -22,14 +29,16 @@ class CloudderServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $source = realpath(__DIR__.'/../../../config/cloudder.php');
+        $source = realpath(__DIR__ . '/../../../config/cloudder.php');
 
-        if (class_exists('Illuminate\Foundation\Application', false)) {
+        if (class_exists('Illuminate\Foundation\Application', FALSE))
+        {
             $this->publishes([$source => config_path('cloudder.php')]);
         }
         $this->mergeConfigFrom($source, 'cloudder');
 
-        $this->app['JD\Cloudder\Cloudder'] = function ($app) {
+        $this->app['JD\Cloudder\Cloudder'] = function ($app)
+        {
             return $app['cloudder'];
         };
     }
@@ -42,8 +51,9 @@ class CloudderServiceProvider extends ServiceProvider
     public function register()
     {
         $app = $this->app;
-        $this->app->singleton('cloudder', function () use ($app) {
-            return new CloudinaryWrapper($app['config'], new Cloudinary, new Cloudinary\Uploader, new Cloudinary\Api);
+        $this->app->singleton('cloudder', function () use ($app)
+        {
+            return new CloudinaryWrapper($app['config'], new Cloudinary, new UploadApi(), new AdminApi());
         });
     }
 
@@ -52,8 +62,8 @@ class CloudderServiceProvider extends ServiceProvider
      *
      * @return array
      */
-    public function provides()
+    public function provides(): array
     {
-        return array('cloudder');
+        return ['cloudder'];
     }
 }

@@ -2,29 +2,68 @@
 
 namespace JD\Cloudder\Test;
 
+use Cloudinary\Api\Admin\AdminApi;
+use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Cloudinary;
+use Illuminate\Config\Repository;
 use JD\Cloudder\CloudinaryWrapper;
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 
-class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
+/**
+ * Class CloudinaryWrapperTest
+ *
+ * @package JD\Cloudder\Test
+ */
+class CloudinaryWrapperTest extends TestCase
 {
-    public function setUp()
+    /**
+     * @var \Illuminate\Config\Repository|m\LegacyMockInterface|m\MockInterface
+     */
+    private $config;
+    /**
+     * @var m\LegacyMockInterface|m\MockInterface
+     */
+    private $cloudinary;
+    /**
+     * @var m\LegacyMockInterface|m\MockInterface
+     */
+    private $uploader;
+    /**
+     * @var m\LegacyMockInterface|m\MockInterface
+     */
+    private $api;
+    /**
+     * @var CloudinaryWrapper
+     */
+    private $cloudinary_wrapper;
+
+    public function setUp(): void
     {
-        $this->config = m::mock('Illuminate\Config\Repository');
-        $this->cloudinary = m::mock('Cloudinary');
-        $this->uploader = m::mock('Cloudinary\Uploader');
-        $this->api = m::mock('Cloudinary\Api');
+        $this->config     = m::mock(Repository::class);
+        $this->cloudinary = m::mock(Cloudinary::class);
+        $this->uploader   = m::mock(UploadApi::class);
+        $this->api        = m::mock(AdminApi::class);
 
-        $this->config->shouldReceive('get')->once()->with('cloudder.cloudName')->andReturn('cloudName');
-        $this->config->shouldReceive('get')->once()->with('cloudder.apiKey')->andReturn('apiKey');
-        $this->config->shouldReceive('get')->once()->with('cloudder.apiSecret')->andReturn('apiSecret');
+        $this->config->shouldReceive('get')->with('cloudder.cloudName')->andReturn('cloudName');
+        $this->config->shouldReceive('get')->with('cloudder.apiKey')->andReturn('apiKey');
+        $this->config->shouldReceive('get')->with('cloudder.apiSecret')->andReturn('apiSecret');
+//        $this->config->shouldReceive('get')->once()->with('cloudder.cloudName')->andReturn('cloudName');
+//        $this->config->shouldReceive('get')->once()->with('cloudder.apiKey')->andReturn('apiKey');
+//        $this->config->shouldReceive('get')->once()->with('cloudder.apiSecret')->andReturn('apiSecret');
 
-        $this->cloudinary->shouldReceive('config')->once();
+//        $this->cloudinary->shouldReceive('config')->once();
 
         $this->cloudinary_wrapper = new CloudinaryWrapper($this->config, $this->cloudinary, $this->uploader, $this->api);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
+        // https://github.com/phpspec/prophecy/issues/366#issuecomment-359587114
+        $this->addToAssertionCount(
+            m::getContainer()->mockery_getExpectationCount()
+        );
+
         m::close();
     }
 
@@ -32,15 +71,17 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_set_uploaded_result_when_uploading_picture()
     {
         // given
-        $filename = 'filename';
+        $filename         = 'filename';
         $defaults_options = [
             'public_id' => null,
-            'tags'      => array()
+            'tags'      => []
         ];
 
         $expected_result = ['public_id' => '123456789'];
 
-        $this->uploader->shouldReceive('upload')->once()->with($filename, $defaults_options)->andReturn($expected_result);
+        $this->uploader->shouldReceive('upload')->once()
+            ->with($filename, $defaults_options)
+            ->andReturn($expected_result);
 
         // when
         $this->cloudinary_wrapper->upload($filename);
@@ -54,10 +95,10 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_set_uploaded_result_when_uploading_picture_unsigned()
     {
         // given
-        $filename = 'filename';
+        $filename         = 'filename';
         $defaults_options = [
             'public_id' => null,
-            'tags'      => array()
+            'tags'      => []
         ];
 
         $upload_presets = [
@@ -82,10 +123,10 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_set_uploaded_result_when_uploading_private_picture()
     {
         // given
-        $filename = 'filename';
+        $filename         = 'filename';
         $defaults_options = [
             'public_id' => null,
-            'tags'      => array(),
+            'tags'      => [],
             'type'      => 'private'
         ];
 
@@ -106,8 +147,8 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $filename = 'filename';
-        $this->config->shouldReceive('get')->with('cloudder.scaling')->once()->andReturn(array());
-        $this->cloudinary->shouldReceive('cloudinary_url')->once()->with($filename, array());
+        $this->config->shouldReceive('get')->with('cloudder.scaling')->once()->andReturn([]);
+        $this->cloudinary->shouldReceive('cloudinary_url')->once()->with($filename, []);
 
         // when
         $this->cloudinary_wrapper->show($filename);
@@ -118,8 +159,8 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $filename = 'filename';
-        $this->config->shouldReceive('get')->with('cloudder.scaling')->once()->andReturn(array());
-        $this->cloudinary->shouldReceive('cloudinary_url')->once()->with($filename, ['secure' => true]);
+        $this->config->shouldReceive('get')->with('cloudder.scaling')->once()->andReturn([]);
+        $this->cloudinary->shouldReceive('cloudinary_url')->once()->with($filename, ['secure' => TRUE]);
 
         // when
         $this->cloudinary_wrapper->secureShow($filename);
@@ -130,7 +171,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $filename = 'filename';
-        $this->cloudinary->shouldReceive('private_download_url')->once()->with($filename, 'png', array());
+        $this->cloudinary->shouldReceive('private_download_url')->once()->with($filename, 'png', []);
 
         // when
         $this->cloudinary_wrapper->showPrivateUrl($filename, 'png');
@@ -141,7 +182,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $filename = 'filename';
-        $this->cloudinary->shouldReceive('private_download_url')->once()->with($filename, 'png', array());
+        $this->cloudinary->shouldReceive('private_download_url')->once()->with($filename, 'png', []);
 
         // when
         $this->cloudinary_wrapper->privateDownloadUrl($filename, 'png');
@@ -152,9 +193,9 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $from = 'from';
-        $to = 'to';
+        $to   = 'to';
 
-        $this->uploader->shouldReceive('rename')->with($from, $to, array())->once();
+        $this->uploader->shouldReceive('rename')->with($from, $to, [])->once();
 
         // when
         $this->cloudinary_wrapper->rename($from, $to);
@@ -165,7 +206,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $pid = 'pid';
-        $this->uploader->shouldReceive('destroy')->with($pid, array())->once();
+        $this->uploader->shouldReceive('destroy')->with($pid, [])->once();
 
         // when
         $this->cloudinary_wrapper->destroyImage($pid);
@@ -176,7 +217,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $pid = 'pid';
-        $this->uploader->shouldReceive('destroy')->with($pid, array())->once();
+        $this->uploader->shouldReceive('destroy')->with($pid, [])->once();
 
         // when
         $this->cloudinary_wrapper->destroy($pid);
@@ -187,7 +228,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $pid = 'pid';
-        $this->uploader->shouldReceive('destroy')->with($pid, array())->once()->andReturn(['result' => 'ok']);
+        $this->uploader->shouldReceive('destroy')->with($pid, [])->once()->andReturn(['result' => 'ok']);
 
         // when
         $deleted = $this->cloudinary_wrapper->delete($pid);
@@ -198,9 +239,9 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_add_tag_when_calling_add_tag()
     {
         $pids = ['pid1', 'pid2'];
-        $tag = 'tag';
+        $tag  = 'tag';
 
-        $this->uploader->shouldReceive('add_tag')->once()->with($tag, $pids, array());
+        $this->uploader->shouldReceive('add_tag')->once()->with($tag, $pids, []);
 
         $this->cloudinary_wrapper->addTag($tag, $pids);
     }
@@ -209,9 +250,9 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_remove_tag_when_calling_add_tag()
     {
         $pids = ['pid1', 'pid2'];
-        $tag = 'tag';
+        $tag  = 'tag';
 
-        $this->uploader->shouldReceive('remove_tag')->once()->with($tag, $pids, array());
+        $this->uploader->shouldReceive('remove_tag')->once()->with($tag, $pids, []);
 
         $this->cloudinary_wrapper->removeTag($tag, $pids);
     }
@@ -220,9 +261,9 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_rename_tag_when_calling_add_tag()
     {
         $pids = ['pid1', 'pid2'];
-        $tag = 'tag';
+        $tag  = 'tag';
 
-        $this->uploader->shouldReceive('replace_tag')->once()->with($tag, $pids, array());
+        $this->uploader->shouldReceive('replace_tag')->once()->with($tag, $pids, []);
 
         $this->cloudinary_wrapper->replaceTag($tag, $pids);
     }
@@ -231,7 +272,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_delete_resources_when_calling_destroy_images()
     {
         $pids = ['pid1', 'pid2'];
-        $this->api->shouldReceive('delete_resources')->once()->with($pids, array());
+        $this->api->shouldReceive('delete_resources')->once()->with($pids, []);
 
         $this->cloudinary_wrapper->destroyImages($pids);
     }
@@ -240,7 +281,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_delete_resources_when_calling_delete_resources()
     {
         $pids = ['pid1', 'pid2'];
-        $this->api->shouldReceive('delete_resources')->once()->with($pids, array());
+        $this->api->shouldReceive('delete_resources')->once()->with($pids, []);
 
         $this->cloudinary_wrapper->deleteResources($pids);
     }
@@ -249,7 +290,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_delete_resources_by_prefix_when_calling_delete_resources_by_prefix()
     {
         $prefix = 'prefix';
-        $this->api->shouldReceive('delete_resources_by_prefix')->once()->with($prefix, array());
+        $this->api->shouldReceive('delete_resources_by_prefix')->once()->with($prefix, []);
 
         $this->cloudinary_wrapper->deleteResourcesByPrefix($prefix);
     }
@@ -257,7 +298,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     /** @test */
     public function it_should_call_api_delete_all_resources_when_calling_delete_all_resources()
     {
-        $this->api->shouldReceive('delete_all_resources')->once()->with(array());
+        $this->api->shouldReceive('delete_all_resources')->once()->with([]);
 
         $this->cloudinary_wrapper->deleteAllResources();
     }
@@ -266,7 +307,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_delete_resources_by_tag_when_calling_delete_resources_by_tag()
     {
         $tag = 'tag1';
-        $this->api->shouldReceive('delete_resources_by_tag')->once()->with($tag, array());
+        $this->api->shouldReceive('delete_resources_by_tag')->once()->with($tag, []);
 
         $this->cloudinary_wrapper->deleteResourcesByTag($tag);
     }
@@ -275,7 +316,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_call_api_delete_derived_resources_when_calling_delete_derived_resources()
     {
         $pids = ['pid1', 'pid2'];
-        $this->api->shouldReceive('delete_derived_resources')->once()->with($pids, array());
+        $this->api->shouldReceive('delete_derived_resources')->once()->with($pids, []);
 
         $this->cloudinary_wrapper->deleteDerivedResources($pids);
     }
@@ -284,10 +325,10 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_set_uploaded_result_when_uploading_video()
     {
         // given
-        $filename = 'filename';
+        $filename         = 'filename';
         $defaults_options = [
-            'public_id' => null,
-            'tags'      => array(),
+            'public_id'     => null,
+            'tags'          => [],
             'resource_type' => 'video'
         ];
 
@@ -308,7 +349,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $this->uploader->shouldReceive('create_archive')->once()->with(
-          ['tag' => 'kitten', 'mode' => 'create', 'target_public_id' => null]
+            ['tag' => 'kitten', 'mode' => 'create', 'target_public_id' => null]
         );
 
         // when
@@ -320,7 +361,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $this->uploader->shouldReceive('create_archive')->once()->with(
-          ['tag' => 'kitten', 'mode' => 'create', 'target_public_id' => 'kitten_archive']
+            ['tag' => 'kitten', 'mode' => 'create', 'target_public_id' => 'kitten_archive']
         );
 
         // when
@@ -332,7 +373,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $this->cloudinary->shouldReceive('download_archive_url')->once()->with(
-          ['tag' => 'kitten', 'target_public_id' => null]
+            ['tag' => 'kitten', 'target_public_id' => null]
         );
 
         // when
@@ -344,7 +385,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     {
         // given
         $this->cloudinary->shouldReceive('download_archive_url')->once()->with(
-          ['tag' => 'kitten', 'target_public_id' => 'kitten_archive']
+            ['tag' => 'kitten', 'target_public_id' => 'kitten_archive']
         );
 
         // when
@@ -355,7 +396,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_response_when_calling_resources()
     {
         // given
-        $this->api->shouldReceive('resources')->once()->with(array());
+        $this->api->shouldReceive('resources')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->resources();
@@ -381,7 +422,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $tag = 'tag';
 
         // given
-        $this->api->shouldReceive('resources_by_tag')->once()->with($tag, array());
+        $this->api->shouldReceive('resources_by_tag')->once()->with($tag, []);
 
         // when
         $this->cloudinary_wrapper->resourcesByTag($tag);
@@ -390,11 +431,11 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     /** @test */
     public function it_should_show_response_when_calling_resources_by_moderation()
     {
-        $kind = 'manual';
+        $kind   = 'manual';
         $status = 'pending';
 
         // given
-        $this->api->shouldReceive('resources_by_moderation')->once()->with($kind, $status, array());
+        $this->api->shouldReceive('resources_by_moderation')->once()->with($kind, $status, []);
 
         // when
         $this->cloudinary_wrapper->resourcesByModeration($kind, $status);
@@ -404,7 +445,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_list_when_calling_tags()
     {
         // given
-        $this->api->shouldReceive('tags')->once()->with(array());
+        $this->api->shouldReceive('tags')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->tags();
@@ -416,7 +457,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid';
 
         // given
-        $this->api->shouldReceive('resource')->once()->with($pid, array());
+        $this->api->shouldReceive('resource')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->resource($pid);
@@ -425,7 +466,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     /** @test */
     public function it_should_update_a_resource_when_calling_update()
     {
-        $pid = 'pid';
+        $pid     = 'pid';
         $options = ['tags' => 'tag1'];
 
         // given
@@ -439,7 +480,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_transformations_list_when_calling_transformations()
     {
         // given
-        $this->api->shouldReceive('transformations')->once()->with(array());
+        $this->api->shouldReceive('transformations')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->transformations();
@@ -451,7 +492,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $transformation = "c_fill,h_100,w_150";
 
         // given
-        $this->api->shouldReceive('transformation')->once()->with($transformation, array());
+        $this->api->shouldReceive('transformation')->once()->with($transformation, []);
 
         // when
         $this->cloudinary_wrapper->transformation($transformation);
@@ -463,7 +504,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $transformation = "c_fill,h_100,w_150";
 
         // given
-        $this->api->shouldReceive('delete_transformation')->once()->with($transformation, array());
+        $this->api->shouldReceive('delete_transformation')->once()->with($transformation, []);
 
         // when
         $this->cloudinary_wrapper->deleteTransformation($transformation);
@@ -473,10 +514,10 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_update_a_transformation_when_calling_update_transformation()
     {
         $transformation = "c_fill,h_100,w_150";
-        $updates = array("allowed_for_strict" => 1);
+        $updates        = ["allowed_for_strict" => 1];
 
         // given
-        $this->api->shouldReceive('update_transformation')->once()->with($transformation, $updates, array());
+        $this->api->shouldReceive('update_transformation')->once()->with($transformation, $updates, []);
 
         // when
         $this->cloudinary_wrapper->updateTransformation($transformation, $updates);
@@ -485,11 +526,11 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     /** @test */
     public function it_should_create_a_transformation_when_calling_create_transformation()
     {
-        $name = "name";
+        $name       = "name";
         $definition = "c_fill,h_100,w_150";
 
         // given
-        $this->api->shouldReceive('create_transformation')->once()->with($name, $definition, array());
+        $this->api->shouldReceive('create_transformation')->once()->with($name, $definition, []);
 
         // when
         $this->cloudinary_wrapper->createTransformation($name, $definition);
@@ -501,7 +542,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pids = ['pid1', 'pid2'];
 
         // given
-        $this->api->shouldReceive('restore')->once()->with($pids, array());
+        $this->api->shouldReceive('restore')->once()->with($pids, []);
 
         // when
         $this->cloudinary_wrapper->restore($pids);
@@ -511,7 +552,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_upload_mappings_list_when_calling_upload_mappings()
     {
         // given
-        $this->api->shouldReceive('upload_mappings')->once()->with(array());
+        $this->api->shouldReceive('upload_mappings')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->uploadMappings();
@@ -523,7 +564,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('upload_mapping')->once()->with($pid, array());
+        $this->api->shouldReceive('upload_mapping')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->uploadMapping($pid);
@@ -535,7 +576,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('create_upload_mapping')->once()->with($pid, array());
+        $this->api->shouldReceive('create_upload_mapping')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->createUploadMapping($pid);
@@ -547,7 +588,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('delete_upload_mapping')->once()->with($pid, array());
+        $this->api->shouldReceive('delete_upload_mapping')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->deleteUploadMapping($pid);
@@ -559,7 +600,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('update_upload_mapping')->once()->with($pid, array());
+        $this->api->shouldReceive('update_upload_mapping')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->updateUploadMapping($pid);
@@ -569,7 +610,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_upload_presets_list_when_calling_upload_presets()
     {
         // given
-        $this->api->shouldReceive('upload_presets')->once()->with(array());
+        $this->api->shouldReceive('upload_presets')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->uploadPresets();
@@ -582,7 +623,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('upload_preset')->once()->with($pid, array());
+        $this->api->shouldReceive('upload_preset')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->uploadPreset($pid);
@@ -594,7 +635,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('create_upload_preset')->once()->with($pid, array());
+        $this->api->shouldReceive('create_upload_preset')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->createUploadPreset($pid);
@@ -606,7 +647,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('delete_upload_preset')->once()->with($pid, array());
+        $this->api->shouldReceive('delete_upload_preset')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->deleteUploadPreset($pid);
@@ -618,7 +659,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('update_upload_preset')->once()->with($pid, array());
+        $this->api->shouldReceive('update_upload_preset')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->updateUploadPreset($pid);
@@ -628,7 +669,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_root_folders_list_when_calling_root_folders()
     {
         // given
-        $this->api->shouldReceive('root_folders')->once()->with(array());
+        $this->api->shouldReceive('root_folders')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->rootFolders();
@@ -640,7 +681,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
         $pid = 'pid1';
 
         // given
-        $this->api->shouldReceive('subfolders')->once()->with($pid, array());
+        $this->api->shouldReceive('subfolders')->once()->with($pid, []);
 
         // when
         $this->cloudinary_wrapper->subfolders($pid);
@@ -650,7 +691,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_usage_list_when_calling_usage()
     {
         // given
-        $this->api->shouldReceive('usage')->once()->with(array());
+        $this->api->shouldReceive('usage')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->usage();
@@ -660,7 +701,7 @@ class CloudinaryWrapperTest extends \PHPUnit_Framework_TestCase
     public function it_should_show_ping_list_when_calling_ping()
     {
         // given
-        $this->api->shouldReceive('ping')->once()->with(array());
+        $this->api->shouldReceive('ping')->once()->with([]);
 
         // when
         $this->cloudinary_wrapper->ping();
