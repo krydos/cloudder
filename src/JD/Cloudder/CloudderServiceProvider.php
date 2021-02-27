@@ -53,7 +53,7 @@ class CloudderServiceProvider extends ServiceProvider
         $app = $this->app;
         $this->app->singleton('cloudder', function () use ($app)
         {
-            return new CloudinaryWrapper($app['config'], new Cloudinary, new UploadApi(), new AdminApi());
+            return new CloudinaryWrapper($app['config'], new Cloudinary(), new UploadApi(), new AdminApi());
         });
     }
 

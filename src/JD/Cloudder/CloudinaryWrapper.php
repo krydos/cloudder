@@ -3,6 +3,7 @@
 namespace JD\Cloudder;
 
 use Cloudinary\Api\Admin\AdminApi;
+use Cloudinary\Api\ApiResponse;
 use Cloudinary\Api\Exception\ApiError;
 use Cloudinary\Api\Upload\UploadApi;
 use Cloudinary\Cloudinary;
@@ -142,15 +143,15 @@ class CloudinaryWrapper
     /**
      * Upload image to cloud.
      *
-     * @param mixed  $source
-     * @param string $publicId
-     * @param array  $uploadPresets
-     * @param array  $uploadOptions
-     * @param array  $tags
+     * @param mixed       $source
+     * @param null        $publicId
+     * @param string|null $uploadPreset
+     * @param array       $uploadOptions
+     * @param array       $tags
      * @return CloudinaryWrapper
      * @throws ApiError
      */
-    public function unsignedUpload($source, $publicId = null, array $uploadPresets = [],
+    public function unsignedUpload($source, $publicId = null, string $uploadPreset = null,
                                    array $uploadOptions = [], array $tags = []): CloudinaryWrapper
     {
         $defaults = [
@@ -164,7 +165,7 @@ class CloudinaryWrapper
         ]);
 
         $options              = array_merge($options, $uploadOptions);
-        $this->uploadedResult = $this->getUploader()->unsignedUpload($source, $uploadPresets, $options);
+        $this->uploadedResult = $this->getUploader()->unsignedUpload($source, $uploadPreset, $options);
 
         return $this;
     }
@@ -259,7 +260,11 @@ class CloudinaryWrapper
      */
     public function privateDownloadUrl(string $publicId, string $format, $options = []): string
     {
-        return $this->getCloudinary()->private_download_url($publicId, $format, $options);
+        return $this->getCloudinary()
+            ->image($publicId)
+            ->privateCdn(TRUE)
+            ->format($format)
+            ->toUrl($options);
     }
 
     /**
@@ -275,7 +280,8 @@ class CloudinaryWrapper
         try
         {
             return $this->getUploader()->rename($publicId, $toPublicId, $options);
-        } catch (Exception $e)
+        }
+        catch (Exception $e)
         {
             return FALSE;
         }
@@ -302,7 +308,7 @@ class CloudinaryWrapper
      */
     public function destroy(string $publicId, $options = []): array
     {
-        return $this->getUploader()->destroy($publicId, $options);
+        return $this->getUploader()->destroy($publicId, $options)->getArrayCopy();
     }
 
     /**
@@ -323,6 +329,7 @@ class CloudinaryWrapper
      * @param array $publicIds
      * @param array $options
      * @return null
+     * @throws ApiError
      */
     public function destroyImages(array $publicIds, $options = [])
     {
@@ -335,10 +342,11 @@ class CloudinaryWrapper
      * @param array $publicIds
      * @param array $options
      * @return null
+     * @throws ApiError
      */
     public function deleteResources(array $publicIds, $options = [])
     {
-        return $this->getApi()->delete_resources($publicIds, $options);
+        return $this->getApi()->deleteAssets($publicIds, $options);
     }
 
     /**
@@ -347,10 +355,11 @@ class CloudinaryWrapper
      * @param string $prefix
      * @param array  $options
      * @return null
+     * @throws ApiError
      */
-    public function deleteResourcesByPrefix($prefix, $options = [])
+    public function deleteResourcesByPrefix(string $prefix, $options = [])
     {
-        return $this->getApi()->delete_resources_by_prefix($prefix, $options);
+        return $this->getApi()->deleteAssetsByPrefix($prefix, $options);
     }
 
     /**
@@ -358,10 +367,11 @@ class CloudinaryWrapper
      *
      * @param array $options
      * @return null
+     * @throws ApiError
      */
     public function deleteAllResources($options = [])
     {
-        return $this->getApi()->delete_all_resources($options);
+        return $this->getApi()->deleteAllAssets($options);
     }
 
     /**
@@ -370,34 +380,38 @@ class CloudinaryWrapper
      * @param string $tag
      * @param array  $options
      * @return null
+     * @throws ApiError
      */
-    public function deleteResourcesByTag($tag, $options = [])
+    public function deleteResourcesByTag(string $tag, $options = [])
     {
-        return $this->getApi()->delete_resources_by_tag($tag, $options);
+        return $this->getApi()->deleteAssetsByTag($tag, $options);
     }
 
     /**
      * Delete transformed images by IDs
      *
      * @param array $publicIds
-     * @param array $options
      * @return null
+     * @throws ApiError
      */
-    public function deleteDerivedResources($publicIds = [], $options = [])
+    public function deleteDerivedResources($publicIds = [])
     {
-        return $this->getApi()->delete_derived_resources($publicIds, $options);
+//        return $this->getApi()->deleteDerivedAssets($publicIds, $options);
+        return $this->getApi()->deleteDerivedAssets($publicIds);
     }
 
     /**
      * Alias of destroy.
      *
-     * @return array
+     * @param       $publicId
+     * @param array $options
+     * @return bool
      */
-    public function delete($publicId, $options = [])
+    public function delete($publicId, $options = []): bool
     {
         $response = $this->destroy($publicId, $options);
 
-        return (boolean)($response['result'] == 'ok');
+        return (boolean)($response['result'] === 'ok');
     }
 
     /**
@@ -406,10 +420,11 @@ class CloudinaryWrapper
      * @param string $tag
      * @param array  $publicIds
      * @param array  $options
+     * @return mixed
      */
-    public function addTag($tag, $publicIds = [], $options = [])
+    public function addTag(string $tag, $publicIds = [], $options = [])
     {
-        return $this->getUploader()->add_tag($tag, $publicIds, $options);
+        return $this->getUploader()->addTag($tag, $publicIds, $options);
     }
 
     /**
@@ -418,10 +433,11 @@ class CloudinaryWrapper
      * @param string $tag
      * @param array  $publicIds
      * @param array  $options
+     * @return ApiResponse
      */
-    public function removeTag($tag, $publicIds = [], $options = [])
+    public function removeTag(string $tag, $publicIds = [], $options = []): ApiResponse
     {
-        return $this->getUploader()->remove_tag($tag, $publicIds, $options);
+        return $this->getUploader()->removeTag($tag, $publicIds, $options);
     }
 
     /**
@@ -430,36 +446,38 @@ class CloudinaryWrapper
      * @param string $tag
      * @param array  $publicIds
      * @param array  $options
+     * @return ApiResponse
      */
-    public function replaceTag($tag, $publicIds = [], $options = [])
+    public function replaceTag(string $tag, $publicIds = [], $options = []): ApiResponse
     {
-        return $this->getUploader()->replace_tag($tag, $publicIds, $options);
+        return $this->getUploader()->replaceTag($tag, $publicIds, $options);
     }
 
     /**
      * Create a zip file containing images matching options.
      *
      * @param array  $options
-     * @param string $archiveName
+     * @param null   $nameArchive
      * @param string $mode
+     * @return mixed
      */
     public function createArchive($options = [], $nameArchive = null, $mode = 'create')
     {
         $options = array_merge($options, ['target_public_id' => $nameArchive, 'mode' => $mode]);
-        return $this->getUploader()->create_archive($options);
+        return $this->getUploader()->createArchive($options);
     }
 
     /**
      * Download a zip file containing images matching options.
      *
-     * @param array  $options
-     * @param string $archiveName
-     * @param string $mode
+     * @param array $options
+     * @param null  $nameArchive
+     * @return mixed
      */
     public function downloadArchiveUrl($options = [], $nameArchive = null)
     {
         $options = array_merge($options, ['target_public_id' => $nameArchive]);
-        return $this->getCloudinary()->download_archive_url($options);
+        return $this->getUploader()->downloadArchiveUrl($options);
     }
 
 
@@ -467,11 +485,11 @@ class CloudinaryWrapper
      * Show Resources
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function resources($options = [])
+    public function resources($options = []): ApiResponse
     {
-        return $this->getApi()->resources($options);
+        return $this->getApi()->assets($options);
     }
 
     /**
@@ -479,22 +497,23 @@ class CloudinaryWrapper
      *
      * @param array $publicIds
      * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function resourcesByIds($publicIds, $options = [])
+    public function resourcesByIds(array $publicIds, $options = []): ApiResponse
     {
-        return $this->getApi()->resources_by_ids($publicIds, $options);
+        return $this->getApi()->assetsByIds($publicIds, $options);
     }
 
     /**
      * Show Resources by tag name
      *
      * @param string $tag
-     * @return array
+     * @param array  $options
+     * @return ApiResponse
      */
-    public function resourcesByTag($tag, $options = [])
+    public function resourcesByTag(string $tag, $options = []): ApiResponse
     {
-        return $this->getApi()->resources_by_tag($tag, $options);
+        return $this->getApi()->assetsByTag($tag, $options);
     }
 
     /**
@@ -502,20 +521,22 @@ class CloudinaryWrapper
      *
      * @param string $kind
      * @param string $status
-     * @return array
+     * @param array  $options
+     * @return ApiResponse
      */
-    public function resourcesByModeration($kind, $status, $options = [])
+    public function resourcesByModeration(string $kind, string $status, $options = []): ApiResponse
     {
-        return $this->getApi()->resources_by_moderation($kind, $status, $options);
+        return $this->getApi()->assetsByModeration($kind, $status, $options);
     }
 
     /**
      * Display tags list
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function tags($options = [])
+    public function tags($options = []): ApiResponse
     {
         return $this->getApi()->tags($options);
     }
@@ -525,11 +546,11 @@ class CloudinaryWrapper
      *
      * @param string $publicId
      * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function resource($publicId, $options = [])
+    public function resource(string $publicId, $options = []): ApiResponse
     {
-        return $this->getApi()->resource($publicId, $options);
+        return $this->getApi()->asset($publicId, $options);
     }
 
     /**
@@ -537,9 +558,9 @@ class CloudinaryWrapper
      *
      * @param string $publicId
      * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function update($publicId, $options = [])
+    public function update(string $publicId, $options = []): ApiResponse
     {
         return $this->getApi()->update($publicId, $options);
     }
@@ -548,9 +569,9 @@ class CloudinaryWrapper
      * List transformations
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function transformations($options = [])
+    public function transformations($options = []): ApiResponse
     {
         return $this->getApi()->transformations($options);
     }
@@ -560,9 +581,9 @@ class CloudinaryWrapper
      *
      * @param string $transformation
      * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function transformation($transformation, $options = [])
+    public function transformation(string $transformation, $options = []): ApiResponse
     {
         return $this->getApi()->transformation($transformation, $options);
     }
@@ -572,11 +593,12 @@ class CloudinaryWrapper
      *
      * @param string $transformation
      * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function deleteTransformation($transformation, $options = [])
+    public function deleteTransformation(string $transformation, $options = []): ApiResponse
     {
-        return $this->getApi()->delete_transformation($transformation, $options);
+        return $this->getApi()->deleteTransformation($transformation, $options);
     }
 
     /**
@@ -584,12 +606,12 @@ class CloudinaryWrapper
      *
      * @param string $transformation
      * @param array  $updates
-     * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function updateTransformation($transformation, $updates = [], $options = [])
+    public function updateTransformation(string $transformation, $updates = []): ApiResponse
     {
-        return $this->getApi()->update_transformation($transformation, $updates, $options);
+        return $this->getApi()->updateTransformation($transformation, $updates);
     }
 
     /**
@@ -597,35 +619,33 @@ class CloudinaryWrapper
      *
      * @param string $name
      * @param string $definition
-     * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function createTransformation($name, $definition, $options = [])
+    public function createTransformation(string $name, string $definition): ApiResponse
     {
-        return $this->getApi()->create_transformation($name, $definition, $options);
+        return $this->getApi()->createTransformation($name, $definition);
     }
 
     /**
      * List Upload Mappings
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function uploadMappings($options = [])
+    public function uploadMappings($options = []): ApiResponse
     {
-        return $this->getApi()->upload_mappings($options);
+        return $this->getApi()->uploadMappings($options);
     }
 
     /**
      * Get upload mapping
      *
      * @param string $name
-     * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function uploadMapping($name, $options = [])
+    public function uploadMapping(string $name): ApiResponse
     {
-        return $this->getApi()->upload_mapping($name, $options);
+        return $this->getApi()->uploadMapping($name);
     }
 
     /**
@@ -633,23 +653,23 @@ class CloudinaryWrapper
      *
      * @param string $name
      * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function createUploadMapping($name, $options = [])
+    public function createUploadMapping(string $name, $options = []): ApiResponse
     {
-        return $this->getApi()->create_upload_mapping($name, $options);
+        return $this->getApi()->createUploadMapping($name, $options);
     }
 
     /**
      * Delete upload mapping
      *
      * @param string $name
-     * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function deleteUploadMapping($name, $options = [])
+    public function deleteUploadMapping(string $name): ApiResponse
     {
-        return $this->getApi()->delete_upload_mapping($name, $options);
+        return $this->getApi()->deleteUploadMapping($name);
     }
 
     /**
@@ -657,22 +677,23 @@ class CloudinaryWrapper
      *
      * @param string $name
      * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function updateUploadMapping($name, $options = [])
+    public function updateUploadMapping(string $name, $options = []): ApiResponse
     {
-        return $this->getApi()->update_upload_mapping($name, $options);
+        return $this->getApi()->updateUploadMapping($name, $options);
     }
 
     /**
      * List Upload Presets
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function uploadPresets($options = [])
+    public function uploadPresets($options = []): ApiResponse
     {
-        return $this->getApi()->upload_presets($options);
+        return $this->getApi()->uploadPresets($options);
     }
 
     /**
@@ -680,35 +701,34 @@ class CloudinaryWrapper
      *
      * @param string $name
      * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function uploadPreset($name, $options = [])
+    public function uploadPreset(string $name, $options = []): ApiResponse
     {
-        return $this->getApi()->upload_preset($name, $options);
+        return $this->getApi()->uploadPreset($name, $options);
     }
 
     /**
      * Create upload preset
      *
      * @param string $name
-     * @param array  $options
-     * @return array
+     * @return ApiResponse
      */
-    public function createUploadPreset($name, $options = [])
+    public function createUploadPreset(string $name): ApiResponse
     {
-        return $this->getApi()->create_upload_preset($name, $options);
+        return $this->getApi()->createUploadPreset($name);
     }
 
     /**
      * Delete upload preset
      *
      * @param string $name
-     * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function deleteUploadPreset($name, $options = [])
+    public function deleteUploadPreset(string $name): ApiResponse
     {
-        return $this->getApi()->delete_upload_preset($name, $options);
+        return $this->getApi()->deleteUploadPreset($name);
     }
 
     /**
@@ -716,22 +736,23 @@ class CloudinaryWrapper
      *
      * @param string $name
      * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function updateUploadPreset($name, $options = [])
+    public function updateUploadPreset(string $name, $options = []): ApiResponse
     {
-        return $this->getApi()->update_upload_preset($name, $options);
+        return $this->getApi()->updateUploadPreset($name, $options);
     }
 
     /**
      * List Root folders
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function rootFolders($options = [])
+    public function rootFolders($options = []): ApiResponse
     {
-        return $this->getApi()->root_folders($options);
+        return $this->getApi()->rootFolders($options);
     }
 
     /**
@@ -739,9 +760,10 @@ class CloudinaryWrapper
      *
      * @param string $name
      * @param array  $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function subfolders($name, $options = [])
+    public function subfolders(string $name, $options = []): ApiResponse
     {
         return $this->getApi()->subfolders($name, $options);
     }
@@ -750,9 +772,10 @@ class CloudinaryWrapper
      * Get usage details
      *
      * @param array $options
-     * @return array
+     * @return ApiResponse
+     * @throws ApiError
      */
-    public function usage($options = [])
+    public function usage($options = []): ApiResponse
     {
         return $this->getApi()->usage($options);
     }
@@ -760,11 +783,10 @@ class CloudinaryWrapper
     /**
      * Ping cloudinary servers
      *
-     * @param array $options
-     * @return array
+     * @return ApiResponse
      */
-    public function ping($options = [])
+    public function ping(): ApiResponse
     {
-        return $this->getApi()->ping($options);
+        return $this->getApi()->ping();
     }
 }
