@@ -12,13 +12,13 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
-        "cloudinary/cloudinary_php": "^1.1"
+        "php": ">=7.3",
+        "cloudinary/cloudinary_php": "^2.0"
     },
     "require-dev": {
-        "laravel/framework": ">=5.0",
-        "phpunit/phpunit": "4.*",
-        "mockery/mockery": "0.9.*"
+        "phpunit/phpunit": "^9.5",
+        "mockery/mockery": "^1.4",
+        "laravel/framework": "^8.29"
     },
     "autoload": {
         "psr-0": {
