@@ -1,25 +1,21 @@
-# Cloudder - Cloudinary wrapper for Laravel 5 / Lumen
+# Cloudder: Cloudinary wrapper for Laravel
 
-
-#### This project is not actively maintained. I might be slow to answer, as you can tell by looking at the issues. I have moved to some new projects, not in the PHP ecosystem. You can always reach out to me through my email.
-
-#### If you fork it on publish it as your own, it might be nice to credit the original author at https://github.com/teepluss/laravel4-cloudinary.
-
-[![Build Status](http://img.shields.io/travis/jrm2k6/cloudder/master.svg?style=flat-square)](https://travis-ci.org/jrm2k6/cloudder)
+[![Build Status](http://img.shields.io/travis/jrm2k6/cloudder/master.svg?style=flat-square)](https://travis-ci.org/legendarydrew/cloudder)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](http://www.opensource.org/licenses/MIT)
-[![Latest Version](http://img.shields.io/packagist/v/jrm2k6/cloudder.svg?style=flat-square)](https://packagist.org/packages/jrm2k6/cloudder)
-[![Total Downloads](https://img.shields.io/packagist/dt/jrm2k6/cloudder.svg?style=flat-square)](https://packagist.org/packages/jrm2k6/cloudder)
+[![Latest Version](http://img.shields.io/packagist/v/jrm2k6/cloudder.svg?style=flat-square)](https://packagist.org/packages/legendarydrew/cloudder)
+[![Total Downloads](https://img.shields.io/packagist/dt/jrm2k6/cloudder.svg?style=flat-square)](https://packagist.org/packages/legendarydrew/cloudder)
 
-> Initially forked from https://github.com/teepluss/laravel4-cloudinary.
+#### An updated version of https://github.com/jrm2k6/cloudder intended to make use of the Cloudinary API v2, as well as compatibility with Laravel 8 and PHP 7.
 
-> **If there is any feature you would like feel free to open an issue or send me an email!**
+Not much was done in this version, except to update the references to the Cloudinary package's classes, and ensuring the test suite passes.
+
+_Please do_ submit a pull request if you notice anything wrong, or want to make any improvements! 
+
+> The original project is found at https://github.com/teepluss/laravel4-cloudinary.
 
 ## Installation
 
-`composer require jrm2k6/cloudder`
-
-For people still using Laravel 4.2: `composer require jrm2k6/cloudder:0.1.*` and check the branch l4 for the installation instructions.
-
+`composer require legendarydrew/cloudder`
 
 ## Configuration
 
@@ -47,13 +43,13 @@ If you don't use auto-discovery follow the next steps:
 Add the following in config/app.php:
 
 ```php
-'providers' => array(
+'providers' => [
   JD\Cloudder\CloudderServiceProvider::class,
-);
+];
 
-'aliases' => array(
+'aliases' => [
   'Cloudder' => JD\Cloudder\Facades\Cloudder::class,
-);
+];
 ```
 
 Run `php artisan vendor:publish --provider="JD\Cloudder\CloudderServiceProvider"`
@@ -229,7 +225,3 @@ returns a `download url` for the newly created archive on Cloudinary.
 ## Running tests
 
 `phpunit`
-
-## Example
-
-You can find a working example in the repo [cloudder-l5-example](https://github.com/jrm2k6/cloudder-l5-sample-project)

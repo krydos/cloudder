@@ -4,6 +4,11 @@ namespace JD\Cloudder\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
+/**
+ * Class Cloudder
+ *
+ * @package JD\Cloudder\Facades
+ */
 class Cloudder extends Facade
 {
 
@@ -12,7 +17,7 @@ class Cloudder extends Facade
      *
      * @return string
      */
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
         return 'cloudder';
     }
