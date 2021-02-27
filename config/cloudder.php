@@ -2,15 +2,11 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cloudinary API configuration
-    |--------------------------------------------------------------------------
-    |
-    | Before using Cloudinary you need to register and get some detail
-    | to fill in below, please visit cloudinary.com.
-    |
-    */
+    /* ------------------------------------------------------------------------------
+     * Cloudinary API configuration
+     * Obtain the following information by creating an an account on cloudinary.com.
+     * ------------------------------------------------------------------------------
+     */
 
     'cloudName'  => env('CLOUDINARY_CLOUD_NAME'),
     'baseUrl'    => env('CLOUDINARY_BASE_URL', 'http://res.cloudinary.com/'.env('CLOUDINARY_CLOUD_NAME')),

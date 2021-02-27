@@ -24,22 +24,27 @@ class CloudinaryWrapperTest extends TestCase
      * @var m\MockInterface
      */
     private $config;
+
     /**
      * @var m\MockInterface
      */
     private $cloudinary;
+
     /**
      * @var m\MockInterface
      */
     private $uploader;
+
     /**
      * @var m\MockInterface
      */
     private $api;
+
     /**
      * @var CloudinaryWrapper
      */
     private $cloudinary_wrapper;
+
     /**
      * @var ApiResponse|m\LegacyMockInterface|m\MockInterface
      */
@@ -52,9 +57,6 @@ class CloudinaryWrapperTest extends TestCase
         $this->uploader     = m::mock(UploadApi::class);
         $this->api          = m::mock(AdminApi::class);
         $this->mockResponse = m::mock(ApiResponse::class);
-
-//        $this->cloudinary->shouldReceive('uploadApi')->andReturn($this->uploader);
-//        $this->cloudinary->shouldReceive('adminApi')->andReturn($this->api);
 
         $this->config->shouldReceive('get')->once()->with('cloudder.cloudName')->andReturn('cloudName');
         $this->config->shouldReceive('get')->once()->with('cloudder.apiKey')->andReturn('apiKey');
@@ -73,7 +75,9 @@ class CloudinaryWrapperTest extends TestCase
         m::close();
     }
 
-    /** @test */
+    /** @test
+     * @throws ApiError
+     */
     public function it_should_set_uploaded_result_when_uploading_picture()
     {
         // given
@@ -125,7 +129,9 @@ class CloudinaryWrapperTest extends TestCase
         $this->assertEquals($expected_result, $result);
     }
 
-    /** @test */
+    /** @test
+     * @throws ApiError
+     */
     public function it_should_set_uploaded_result_when_uploading_private_picture()
     {
         // given

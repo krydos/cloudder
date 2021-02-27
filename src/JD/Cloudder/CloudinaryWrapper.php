@@ -18,42 +18,39 @@ use Illuminate\Config\Repository;
 class CloudinaryWrapper
 {
     /**
-     * Cloudinary lib.
+     * Reference to the Cloudinary library.
      *
      * @var Cloudinary
      */
     protected $cloudinary;
 
     /**
-     * Cloudinary uploader.
+     * Reference to the Cloudinary uploader.
      *
      * @var UploadApi
      */
     protected $uploader;
 
     /**
-     * Repository config.
+     * Reference to the Repository config.
      *
      * @var Repository
      */
     protected $config;
 
     /**
-     * Uploaded result.
+     * Reference to the Uploaded result.
      *
      * @var array
      */
     protected $uploadedResult;
 
     /**
+     * Reference to the Cloudinary [Admin] API.
+     *
      * @var AdminApi
      */
     private $api;
-
-    /**
-     * @var array[]
-     */
-    private $configSettings;
 
     /**
      * Create a new cloudinary instance.
@@ -71,20 +68,18 @@ class CloudinaryWrapper
         $this->api        = $api;
         $this->config     = $config;
 
-        $this->configSettings = [
+        // Configure Cloudinary.
+        $this->cloudinary->configuration = [
             'cloud' => [
                 'cloud_name' => $this->config->get('cloudder.cloudName'),
                 'api_key'    => $this->config->get('cloudder.apiKey'),
                 'api_secret' => $this->config->get('cloudder.apiSecret')
             ]
         ];
-
-        // Configure Cloudinary.
-        $this->cloudinary->configuration = $this->configSettings;
     }
 
     /**
-     * Get cloudinary class.
+     * Returns the Cloudinary instance.
      *
      * @return Cloudinary
      */
@@ -94,7 +89,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Get cloudinary uploader.
+     * Returns the Cloudinary UploadAPI instance.
      *
      * @return UploadApi
      */
@@ -104,7 +99,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Get cloudinary api
+     * Returns the Cloudinary AdminAPI instance.
      *
      * @return AdminApi
      */
@@ -113,9 +108,8 @@ class CloudinaryWrapper
         return $this->api;
     }
 
-
     /**
-     * Upload image to cloud.
+     * Upload an image to cloud storage.
      *
      * @param mixed  $source
      * @param string $publicId
@@ -141,7 +135,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Upload image to cloud.
+     * Upload an image to cloud storage using the unsigned method.
      *
      * @param mixed       $source
      * @param null        $publicId
@@ -171,7 +165,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Upload video to cloud.
+     * Upload a video to cloud storage.
      *
      * @param mixed  $source
      * @param string $publicId
@@ -187,7 +181,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Uploaded result.
+     * Returns the uploaded result of the most recent upload.
      *
      * @return array
      */
@@ -197,7 +191,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Uploaded public ID.
+     * Returns the public ID of the most recent upload.
      *
      * @return string
      */
@@ -207,7 +201,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Display resource through https.
+     * Returns a URL for displaying a resource.
      *
      * @param string $publicId
      * @param array  $options
@@ -222,7 +216,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Display resource through https.
+     * Returns a secure (HTTPS) URL for displaying a resource.
      *
      * @param string $publicId
      * @param array  $options
@@ -236,9 +230,8 @@ class CloudinaryWrapper
         return $this->getCloudinary()->image($publicId)->toUrl($options);
     }
 
-
     /**
-     * Alias for privateDownloadUrl
+     * An alias for privateDownloadUrl().
      *
      * @param string $publicId
      * @param string $format
@@ -251,7 +244,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Display private image
+     * Returns a private URL for displaying a resource.
      *
      * @param string $publicId
      * @param string $format
@@ -268,7 +261,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Rename public ID.
+     * Rename a resource's public ID.
      *
      * @param string $publicId
      * @param string $toPublicId
@@ -288,7 +281,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Alias for destroy
+     * An alias for destroy().
      *
      * @param string $publicId
      * @param array  $options
@@ -300,7 +293,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Destroy resource from Cloudinary
+     * Destroy a Cloudinary resource.
      *
      * @param string $publicId
      * @param array  $options
@@ -312,7 +305,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Restore a resource
+     * Restore a Cloudinary resource (from deletion).
      *
      * @param array $publicIds
      * @param array $options
@@ -324,7 +317,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Alias for deleteResources
+     * An alias for deleteResources().
      *
      * @param array $publicIds
      * @param array $options
@@ -337,7 +330,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Destroy images from Cloudinary
+     * Delete multiple Cloudinary resources.
      *
      * @param array $publicIds
      * @param array $options
@@ -350,7 +343,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Destroy a resource by its prefix
+     * Delete multiple Cloudinary resources having a prefix.
      *
      * @param string $prefix
      * @param array  $options
@@ -363,7 +356,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Destroy all resources from Cloudinary
+     * Delete all Cloudinary resources.
      *
      * @param array $options
      * @return null
@@ -375,7 +368,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Delete all resources from one tag
+     * Delete all Cloudinary resources having a specific tag.
      *
      * @param string $tag
      * @param array  $options
@@ -388,7 +381,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Delete transformed images by IDs
+     * Delete multiple Cloudinary resources' transformed images.
      *
      * @param array $publicIds
      * @return null
@@ -396,12 +389,11 @@ class CloudinaryWrapper
      */
     public function deleteDerivedResources($publicIds = [])
     {
-//        return $this->getApi()->deleteDerivedAssets($publicIds, $options);
         return $this->getApi()->deleteDerivedAssets($publicIds);
     }
 
     /**
-     * Alias of destroy.
+     * An alias of destroy().
      *
      * @param       $publicId
      * @param array $options
@@ -415,7 +407,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Add tag to images.
+     * Add a tag to Cloudinary resources.
      *
      * @param string $tag
      * @param array  $publicIds
@@ -428,7 +420,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Remove tag from images.
+     * Remove a tag from Cloudinary resources.
      *
      * @param string $tag
      * @param array  $publicIds
@@ -441,7 +433,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Replace image's tag.
+     * Replace a tag on one or more Cloudinary resources.
      *
      * @param string $tag
      * @param array  $publicIds
@@ -454,7 +446,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Create a zip file containing images matching options.
+     * Create a zip file containing Cloudinary resources matching specified options.
      *
      * @param array  $options
      * @param null   $nameArchive
@@ -468,7 +460,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Download a zip file containing images matching options.
+     * Download a zip file containing Cloudinary resources matching options.
      *
      * @param array $options
      * @param null  $nameArchive
@@ -482,7 +474,7 @@ class CloudinaryWrapper
 
 
     /**
-     * Show Resources
+     * Returns a list of Cloudinary resources.
      *
      * @param array $options
      * @return ApiResponse
@@ -493,7 +485,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Show Resources by id
+     * Returns a list of Cloudinary resources specified by public IDs.
      *
      * @param array $publicIds
      * @param array $options
@@ -505,7 +497,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Show Resources by tag name
+     * Returns a list of Cloudinary resources specified by a tag.
      *
      * @param string $tag
      * @param array  $options
@@ -517,7 +509,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Show Resources by moderation status
+     * Returns a list of Cloudinary resources specified by moderation status.
      *
      * @param string $kind
      * @param string $status
@@ -530,7 +522,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Display tags list
+     * Returns a list of tags.
      *
      * @param array $options
      * @return ApiResponse
@@ -542,7 +534,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Display a resource
+     * Display a Cloudinary resource.
      *
      * @param string $publicId
      * @param array  $options
@@ -554,7 +546,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Updates a resource
+     * Updates a Cloudinary resource.
      *
      * @param string $publicId
      * @param array  $options
@@ -566,7 +558,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * List transformations
+     * Returns a List of available transformations.
      *
      * @param array $options
      * @return ApiResponse
@@ -577,7 +569,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * List single transformation
+     * Returns information about a transformation.
      *
      * @param string $transformation
      * @param array  $options
@@ -589,7 +581,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Delete single transformation
+     * Delete a transformation.
      *
      * @param string $transformation
      * @param array  $options
@@ -602,7 +594,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Update single transformation
+     * Update a transformation.
      *
      * @param string $transformation
      * @param array  $updates
@@ -615,7 +607,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Create transformation
+     * Create a transformation.
      *
      * @param string $name
      * @param string $definition
@@ -627,7 +619,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * List Upload Mappings
+     * Returns a list of upload mappings.
      *
      * @param array $options
      * @return ApiResponse
@@ -638,7 +630,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Get upload mapping
+     * Returns information about an upload mapping.
      *
      * @param string $name
      * @return ApiResponse
@@ -649,7 +641,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Create upload mapping
+     * Create an upload mapping.
      *
      * @param string $name
      * @param array  $options
@@ -661,7 +653,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Delete upload mapping
+     * Delete an upload mapping.
      *
      * @param string $name
      * @return ApiResponse
@@ -673,7 +665,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Update upload mapping
+     * Update an upload mapping.
      *
      * @param string $name
      * @param array  $options
@@ -686,7 +678,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * List Upload Presets
+     * Returns a list of upload presets.
      *
      * @param array $options
      * @return ApiResponse
@@ -697,7 +689,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Get upload mapping
+     * Returns information about an upload preset.
      *
      * @param string $name
      * @param array  $options
@@ -709,7 +701,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Create upload preset
+     * Create an upload preset.
      *
      * @param string $name
      * @return ApiResponse
@@ -720,7 +712,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Delete upload preset
+     * Delete an upload preset.
      *
      * @param string $name
      * @return ApiResponse
@@ -732,7 +724,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Update upload preset
+     * Update an upload preset.
      *
      * @param string $name
      * @param array  $options
@@ -745,7 +737,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * List Root folders
+     * Returns a list of root folders.
      *
      * @param array $options
      * @return ApiResponse
@@ -756,7 +748,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * List subfolders
+     * Returns a list of subfolders.
      *
      * @param string $name
      * @param array  $options
@@ -769,7 +761,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Get usage details
+     * Returns Cloudinary usage details.
      *
      * @param array $options
      * @return ApiResponse
@@ -781,7 +773,7 @@ class CloudinaryWrapper
     }
 
     /**
-     * Ping cloudinary servers
+     * Ping Cloudinary servers.
      *
      * @return ApiResponse
      */
