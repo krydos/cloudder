@@ -2,9 +2,6 @@
 
 namespace JD\Cloudder;
 
-use Cloudinary\Api\Admin\AdminApi;
-use Cloudinary\Api\Upload\UploadApi;
-use Cloudinary\Cloudinary;
 use Illuminate\Support\ServiceProvider;
 
 /**
