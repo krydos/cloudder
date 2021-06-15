@@ -51,9 +51,8 @@ class CloudderServiceProvider extends ServiceProvider
     public function register()
     {
         $app = $this->app;
-        $this->app->singleton('cloudder', function () use ($app)
-        {
-            return new CloudinaryWrapper($app['config'], new Cloudinary(), new UploadApi(), new AdminApi());
+        $this->app->singleton('cloudder', function() use ($app) {
+            return new CloudinaryWrapper($app['config']);
         });
     }
 

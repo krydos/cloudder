@@ -61,21 +61,21 @@ class CloudinaryWrapper
      * @param UploadApi  $uploader
      * @param AdminApi   $api
      */
-    public function __construct(Repository $config, Cloudinary $cloudinary, UploadApi $uploader, AdminApi $api)
+    public function __construct(Repository $config)
     {
-        $this->cloudinary = $cloudinary;
-        $this->uploader   = $uploader;
-        $this->api        = $api;
         $this->config     = $config;
-
         // Configure Cloudinary.
-        $this->cloudinary->configuration = [
+        $cloudinaryConfiguration = [
             'cloud' => [
                 'cloud_name' => $this->config->get('cloudder.cloudName'),
                 'api_key'    => $this->config->get('cloudder.apiKey'),
-                'api_secret' => $this->config->get('cloudder.apiSecret')
-            ]
+                'api_secret' => $this->config->get('cloudder.apiSecret'),
+            ],
         ];
+
+        $this->cloudinary = new Cloudinary($cloudinaryConfiguration);
+        $this->uploader   = new UploadApi($cloudinaryConfiguration);
+        $this->api        = new AdminApi($cloudinaryConfiguration);
     }
 
     /**
