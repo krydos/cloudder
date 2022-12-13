@@ -1,21 +1,13 @@
 # Cloudder: Cloudinary wrapper for Laravel
 
-[![Build Status](http://img.shields.io/travis/jrm2k6/cloudder/master.svg?style=flat-square)](https://travis-ci.org/legendarydrew/cloudder)
-[![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](http://www.opensource.org/licenses/MIT)
-[![Latest Version](http://img.shields.io/packagist/v/jrm2k6/cloudder.svg?style=flat-square)](https://packagist.org/packages/legendarydrew/cloudder)
-[![Total Downloads](https://img.shields.io/packagist/dt/jrm2k6/cloudder.svg?style=flat-square)](https://packagist.org/packages/legendarydrew/cloudder)
-
+#### Fork of https://github.com/TentacleApp/cloudder which has no much difference except it is published to packagist.
 #### An updated version of https://github.com/jrm2k6/cloudder intended to make use of the Cloudinary API v2, as well as compatibility with Laravel 8 and PHP 7.
-
-Not much was done in this version, except to update the references to the Cloudinary package's classes, and ensuring the test suite passes.
-
-_Please do_ submit a pull request if you notice anything wrong, or want to make any improvements! 
 
 > The original project is found at https://github.com/teepluss/laravel4-cloudinary.
 
 ## Installation
 
-`composer require legendarydrew/cloudder`
+`composer require krydos/cloudder`
 
 ## Configuration
 
