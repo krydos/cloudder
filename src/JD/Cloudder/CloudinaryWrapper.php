@@ -9,6 +9,7 @@ use Cloudinary\Api\Upload\UploadApi;
 use Cloudinary\Cloudinary;
 use Exception;
 use Illuminate\Config\Repository;
+use Cloudinary\Transformation\CommonTransformation;
 
 /**
  * Class CloudinaryWrapper
@@ -212,7 +213,7 @@ class CloudinaryWrapper
         $defaults = $this->config->get('cloudder.scaling');
         $options  = array_merge($defaults, $options);
 
-        return $this->getCloudinary()->image($publicId)->toUrl($options);
+        return $this->getCloudinary()->image($publicId)->toUrl(new CommonTransformation($options));
     }
 
     /**
