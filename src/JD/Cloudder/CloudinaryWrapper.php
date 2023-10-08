@@ -212,8 +212,15 @@ class CloudinaryWrapper
     {
         $defaults = $this->config->get('cloudder.scaling');
         $options  = array_merge($defaults, $options);
+        $cloudinary = $this->getCloudinary();
+        if (! empty($options['cloud_name'])) {
+            $cloudinary
+                ->configuration
+                ->cloud
+                ->setCloudConfig('cloud_name', $options['cloud_name']);
+        }
 
-        return $this->getCloudinary()->image($publicId)->toUrl(new CommonTransformation($options));
+        return $cloudinary->image($publicId)->toUrl(new CommonTransformation($options));
     }
 
     /**
