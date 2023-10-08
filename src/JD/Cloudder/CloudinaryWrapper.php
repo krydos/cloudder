@@ -19,6 +19,12 @@ use Cloudinary\Transformation\CommonTransformation;
 class CloudinaryWrapper
 {
     /**
+     * List of properties recognizable by
+     * Cloudinary's CloudConfig.
+     */
+    public $knownCloudProps = ['cloud_name'];
+
+    /**
      * Reference to the Cloudinary library.
      *
      * @var Cloudinary
@@ -212,7 +218,8 @@ class CloudinaryWrapper
     {
         $defaults = $this->config->get('cloudder.scaling');
         $options  = array_merge($defaults, $options);
-        $cloudinary = $this->getCloudinary();
+        $cloudinary = $this->overrideCloudOptions($this->getCloudinary(), $options);
+
         if (! empty($options['cloud_name'])) {
             $cloudinary
                 ->configuration
@@ -234,8 +241,9 @@ class CloudinaryWrapper
     {
         $defaults = $this->config->get('cloudder.scaling');
         $options  = array_merge($defaults, $options, ['secure' => true]);
+        $cloudinary = $this->overrideCloudOptions($this->getCloudinary(), $options);
 
-        return $this->getCloudinary()->image($publicId)->toUrl(new CommonTransformation($options));
+        return $cloudinary->image($publicId)->toUrl(new CommonTransformation($options));
     }
 
     /**
@@ -788,5 +796,24 @@ class CloudinaryWrapper
     public function ping(): ApiResponse
     {
         return $this->getApi()->ping();
+    }
+
+    /**
+     * Override Cloudinary's CloudConfig
+     *
+     * @return Cloudinary
+     */
+    public function overrideCloudOptions($cloudinary, $options)
+    {
+        foreach ($this->knownCloudProps as $prop) {
+            if (! empty($options[$prop])) {
+                $cloudinary
+                    ->configuration
+                    ->cloud
+                    ->setCloudConfig('cloud_name', $options[$prop]);
+            }
+        }
+
+        return $cloudinary;
     }
 }
