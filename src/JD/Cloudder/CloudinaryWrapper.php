@@ -226,9 +226,9 @@ class CloudinaryWrapper
     public function secureShow(string $publicId, $options = []): string
     {
         $defaults = $this->config->get('cloudder.scaling');
-        $options  = array_merge($defaults, $options, ['secure' => TRUE]);
+        $options  = array_merge($defaults, $options, ['secure' => true]);
 
-        return $this->getCloudinary()->image($publicId)->toUrl($options);
+        return $this->getCloudinary()->image($publicId)->toUrl(new CommonTransformation($options));
     }
 
     /**
